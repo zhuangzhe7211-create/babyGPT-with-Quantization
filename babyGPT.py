@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-batch_size = 64
+batch_size = 32
 block_size = 256
 n_embd = 768
 n_heads = 12
@@ -33,9 +33,11 @@ test_data = data[n:]
 
 def get_batch(split):
     data = train_data if split == 'train' else test_data
+    
     ix = torch.randint(0, len(data) - block_size, (batch_size,))
     x = torch.stack([data[i : i + block_size] for i in ix])
     y = torch.stack([data[i + 1 : i + block_size + 1] for i in ix])
+
 
     return x.to(device), y.to(device)
 
@@ -134,21 +136,23 @@ class GPT(nn.Module):
             idx = torch.cat([idx, idx_next], dim = -1)
         return idx
 
-model = GPT().to(device)
-lr = 1e-4
-optimizer = torch.optim.AdamW(model.parameters(), lr = lr)
 
-iters = 5000
-for i in range(iters):
-    x, y = get_batch("train")
-    logits, loss = model(x, y)
-    optimizer.zero_grad(set_to_none = True)
-    loss.backward()
-    optimizer.step()
-    if (i + 1) % 1000 == 0: 
-        print (f"iter{i + 1}, Loss: {loss:.4f}")
+if __name__ == "__main__":  
+    model = GPT().to(device)
+    lr = 1e-4
+    optimizer = torch.optim.AdamW(model.parameters(), lr = lr)
 
-context = torch.tensor([encode("What should I do")], dtype = torch.long, device = device)
-gen = model.generate(context, max_new_token = 500, temperature = 0.8)
-print(decode(gen[0].tolist()))
-torch.save(model.state_dict(), "BabyGPT-Quantization/checkpoint.pt")
+    iters = 1000
+    for i in range(iters):
+        x, y = get_batch("train")
+        logits, loss = model(x, y)
+        optimizer.zero_grad(set_to_none = True)
+        loss.backward()
+        optimizer.step()
+        if (i + 1) % 200 == 0: 
+            print (f"iter{i + 1}, Loss: {loss:.4f}")
+
+    context = torch.tensor([encode("What should I do")], dtype = torch.long, device = device)
+    gen = model.generate(context, max_new_token = 500, temperature = 0.8)
+    print(decode(gen[0].tolist()))
+    torch.save(model.state_dict(), "BabyGPT-Quantization/checkpoint.pt")

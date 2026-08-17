@@ -40,3 +40,52 @@ Towe!lenrse, ben, blparinwit id,
 Ai
 不知道在说什么
 好的，我们现在一口气跑5000次训练
+但是我发现跑的太慢了，决定减小一点模型的参数
+然后我们训练1000次
+iter200, Loss: 2.4257
+iter400, Loss: 2.1754
+iter600, Loss: 1.8690
+iter800, Loss: 1.7285
+iter1000, Loss: 1.5787
+最后我们跑了一下量化
+tensor(5.5433, device='cuda:0')
+tensor(5.5411, device='cuda:0')
+tensor(5.5431, device='cuda:0')
+tensor(5.5428, device='cuda:0')
+tensor(5.5438, device='cuda:0')
+tensor(5.5436, device='cuda:0')
+tensor(5.5433, device='cuda:0')
+发现，几乎没有什么差别，说明小模型的outlier是涌现出来的，这个参数的大小对于int8还是太轻松了
+int6
+tensor(5.7867, device='cuda:0')
+tensor(5.7918, device='cuda:0')
+tensor(5.7902, device='cuda:0')
+tensor(5.7912, device='cuda:0')
+tensor(5.7960, device='cuda:0')
+tensor(5.7873, device='cuda:0')
+tensor(5.7911, device='cuda:0')
+int4
+tensor(6.1025, device='cuda:0')
+tensor(6.2620, device='cuda:0')
+tensor(6.1657, device='cuda:0')
+tensor(6.1712, device='cuda:0')
+tensor(6.2569, device='cuda:0')
+tensor(6.1273, device='cuda:0')
+tensor(6.1663, device='cuda:0')
+int3
+ensor(5.6132, device='cuda:0')
+tensor(6.9348, device='cuda:0')
+tensor(5.9354, device='cuda:0')
+tensor(6.1317, device='cuda:0')
+tensor(6.2151, device='cuda:0')
+tensor(5.8779, device='cuda:0')
+tensor(5.8613, device='cuda:0')
+int2
+tensor(5.7363, device='cuda:0')
+tensor(55.6390, device='cuda:0')
+tensor(19.2894, device='cuda:0')
+tensor(29.8066, device='cuda:0')
+tensor(19.8817, device='cuda:0')
+tensor(8.6657, device='cuda:0')
+tensor(10.7952, device='cuda:0')
+同时，我们也发现了per_channel 的时候对于dim = 0会显著减小
