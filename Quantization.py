@@ -8,7 +8,9 @@ import copy
 device = "cuda" if torch.cuda.is_available() else "cpu"
 model = babyGPT.GPT().to(device)
 model.load_state_dict(torch.load("BabyGPT-Quantization/checkpoint.pt"))
-byte = 2
+byte = 5
+total = sum(p.numel() for p in model.parameters() if p.data.ndim >= 2)
+print (f"total weights: {total/1e6:.4f} M")
 def absmax(idx, bytes = 8):
     a = idx.abs().max()
     s = (2 ** (bytes - 1) - 1) / a
@@ -58,7 +60,10 @@ x_test, y_test = babyGPT.get_batch("test")
 @torch.no_grad()
 def cal_perplexity(model, x, y):
     _, loss = model(x, y)
-    return torch.exp(loss)
+    return torch.exp(loss).item()
+
+def loss(x1, x2):
+    return (x2 - x1) / x1 * 100
 
 model_abs = copy.deepcopy(model)
 for params in model_abs.parameters():
@@ -103,14 +108,20 @@ per_abs_perchannel1 = cal_perplexity(model_abs_perchannel1, x_test, y_test)
 per_zp = cal_perplexity(model_zp, x_test, y_test)
 per_zp_perchannel0 = cal_perplexity(model_zp_perchannel0, x_test, y_test)
 per_zp_perchannel1 = cal_perplexity(model_zp_perchannel1, x_test, y_test)
+loss1 = loss(per_baseline, per_abs)
+loss2 = loss(per_baseline, per_abs_perchannel0)
+loss3 = loss(per_baseline, per_abs_perchannel1)
+loss4 = loss(per_baseline, per_zp)
+loss5 = loss(per_baseline, per_zp_perchannel0)
+loss6 = loss(per_baseline, per_zp_perchannel1)
 
-print(per_baseline)
-print(per_abs)
-print(per_abs_perchannel0)
-print(per_abs_perchannel1)
-print(per_zp)
-print(per_zp_perchannel0)
-print(per_zp_perchannel1)
+print(f"FP32 baseline: {per_baseline:.4f}")
+print(f"absmax: {per_abs:.4f}, loss: {loss1:.4f}%")
+print(f"absmax with per-channel quantization in channel 0: {per_abs_perchannel0:.4f}, loss: {loss2:.4f}%")
+print(f"absmax with per-channel quantization in channel 1: {per_abs_perchannel1:.4f}, loss: {loss3:.4f}%")
+print(f"zero-point: {per_zp:.4f}, loss: {loss4:.4f}%")
+print(f"zero-point with per-channel quantization in channel 0: {per_zp_perchannel0:.4f}, loss: {loss5:.4f}%")
+print(f"zero-point with per-channel quantization in channel 1: {per_zp_perchannel1:.4f}, loss: {loss6:.4f}%")
 # tensor(5.6891, device='cuda:0')
 # tensor(5.6880, device='cuda:0')
 # tensor(5.6898, device='cuda:0')
