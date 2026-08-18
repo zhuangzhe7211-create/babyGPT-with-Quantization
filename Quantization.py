@@ -129,3 +129,4 @@ print(f"zero-point with per-channel quantization in channel 1: {per_zp_perchanne
 # tensor(5.6900, device='cuda:0')
 # tensor(5.6896, device='cuda:0')
 # tensor(5.6886, device='cuda:0')
+print (round(loss1), round(loss2), round(loss3), round(loss4), round(loss5), round(loss6),)
